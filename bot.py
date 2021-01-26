@@ -42,12 +42,12 @@ def date_to_milliseconds(date_str):
 
 #bars=client.get_historical_klines('BTCUSDT','15m',timestamp,limit=21)
 
-start_time= date_to_milliseconds("315 minutes ago UTC")
+start_time= date_to_milliseconds("250 minutes ago UTC")
 #print(start_time)
 start_time_check = pd.to_datetime(start_time,unit='ms')
 #print(start_time_check)
 
-bars2=client.get_historical_klines('BTCUSDT','15m',limit= 21,start_str=start_time)
+bars2=client.get_historical_klines('BTCUSDT','5m',limit= 200,start_str=start_time)
 
 #output_data=[]
 #output_data+=bars2
@@ -56,16 +56,38 @@ for line in bars2:
     del line[5:]
     line[0]=pd.to_datetime(line[0], unit='ms')
     #print(line[0])
+    #line[1:4].apply(lambda x: float(x))
+    #print(type(line[2]))
+
 
 btc_df=pd.DataFrame(bars2,columns=['date','open','high','low','close'])
+#btc_df['open'].apply(lambda x: float(x))
+#btc_df['open']=btc_df['open'].astype(float)
+#btc_df.apply(pd.to_numeric,errors='coerce')
+btc_df[['open','high','low','close']]=btc_df[['open','high','low','close']].apply(pd.to_numeric,errors='coerce')
+
+
+#btc_df[['close']].describe()
+
+#btc_df["ap"]=btc_df['open']+btc_df['close']/3
+btc_df["ap"]=(btc_df['high']+btc_df['low']+btc_df['close'])/3
+#btc_df=pd.DataFrame.insert(loc=7,column='ap',value=2,allow_duplicates=False)
 #btc_df.set_index('date', inplace=True)
 #print(btc_df.head())
-
+btc_df['esa']=btc_df['ap'].ewm(span=10, min_periods=10,adjust=False,ignore_na=False).mean()
+btc_df['d']=(abs(btc_df['ap']-btc_df['esa'])).ewm(span=10,min_periods=10,adjust=False,ignore_na=False).mean()
+btc_df['ci']=(btc_df['ap']-btc_df['esa'])/(0.015*btc_df['d']) 
+btc_df['wt1']=btc_df['ci'].ewm(span=21,min_periods=21,adjust=False,ignore_na=False).mean()
+btc_df['wt2']=btc_df['wt1'].ewm(span=4,min_periods=4,adjust=False,ignore_na=False).mean()
 #btc_df.to_csv('btc_bars2.csv')
 
-btc_df['20sma']=btc_df.close.rolling(21).mean()
-btc_df['20ema']=btc_df.close.ewm(span=21,adjust=False).mean()
-print(btc_df.tail(21))
+#btc_df['20sma']=btc_df.close.rolling(21).mean()
+#btc_df['20ema']=btc_df.close.ewm(span=21,adjust=False).mean()
+btc_df.info()
+#print(btc_df['esa'])
+#print(btc_df.head(2))
+#print(btc_df.tail(2))
+print(btc_df)
 
 
 
