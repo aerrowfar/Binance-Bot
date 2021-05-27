@@ -13,9 +13,12 @@ import sheets as sh
 from time import sleep
 import traceback
 from decimal import Decimal
+from dotenv import load_dotenv
+load_dotenv()
+import os
 
-api_key= keys.binance_api
-api_secret=keys.binance_secret
+api_key= os.environ.get('binance_api')
+api_secret=os.environ.get('binance_secret')
 
 client= Client(api_key,api_secret)
 
